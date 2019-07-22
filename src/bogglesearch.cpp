@@ -7,65 +7,68 @@
 using namespace std;
 
 bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word);
-bool humanWordSearchHelper(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord);
 bool searchNeighbors(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord, int row, int col);
 void mark(Grid<bool>& marked, int row, int col);
 void unmark(Grid<bool>& marked, int row, int col);
 
 bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word) {
+    // Handle word not found in dictionary and word length too low
     if (word.size() < BoggleGUI::MIN_WORD_LENGTH ||
             !dictionary.contains(word)) {
         return false;
     }
+    // Initialize marked grid to be filled with false
     Grid<bool> marked(board.numRows(), board.numCols(), false);
+    // Clear previous highlighting
     BoggleGUI::clearHighlighting();
-    return humanWordSearchHelper(board, marked, "", toUpperCase(word));
-}
 
-bool humanWordSearchHelper(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord) {
-    // choose
+    // Iterate over decisions
     for (int r = 0; r < board.numRows(); r ++) {
         for (int c = 0; c < board.numCols(); c ++) {
+            // choose
             char currentChar = board[r][c];
-            string newWord = currentWord + charToString(currentChar);
-            cout << newWord << endl;
-            if (startsWith(targetWord, newWord)) {
+            string newWord = charToString(currentChar);
+            if (startsWith(word, newWord)) {
                 mark(marked, r, c);
                 // explore neighbors
-                if (searchNeighbors(board, marked, newWord, targetWord, r, c)) {
+                if (searchNeighbors(board, marked, newWord, word, r, c)) {
                     return true;
                 } else {
+                    // move to next starting character
                     unmark(marked, r, c);
                 }
             }
         }
     }
+    // no decisions left to make, the target word is not found
     return false;
 }
 
 bool searchNeighbors(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord, int row, int col) {
+    // explore eight adjacent neighbors
     for (int r = row - 1; r <= row + 1; r ++) {
         for (int c = col - 1; c <= col + 1; c ++) {
             if (board.inBounds(r, c)) {
+                // choose
                 char currentChar = board[r][c];
                 string newWord = currentWord + charToString(currentChar);
                 if (newWord == targetWord) {
-                    cout << newWord << endl;
                     mark(marked, r, c);
                     return true;
                 }
                 if (!marked[r][c] && startsWith(targetWord, newWord)) {
-                    cout << newWord << endl;
                     mark(marked, r, c);
                     if (searchNeighbors(board, marked, newWord, targetWord, r, c)) {
                         return true;
                     } else {
+                        // backtrack to choose another neighbor
                         unmark(marked, r, c);
                     }
                 }
             }
         }
     }
+    // all neighbors failed to match the target word
     return false;
 }
 
