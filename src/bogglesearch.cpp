@@ -32,6 +32,23 @@ bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word) {
                 mark(marked, r, c);
                 // explore neighbors
                 if (searchNeighbors(board, marked, newWord, word, r, c)) {
+                    // add score
+                    // Words of 4 or fewer letters are worth 1 point.
+                    // 5-letter words are worth 2 points.
+                    // 6-letter words are worth 3 points.
+                    // 7-letter words are worth 5 points.
+                    // Words longer than 7 letters are worth 11 points.
+                    if (word.size() <= 4) {
+                        BoggleGUI::scorePointsHuman(1);
+                    } else if (word.size() == 5) {
+                        BoggleGUI::scorePointsHuman(2);
+                    } else if (word.size() == 6) {
+                        BoggleGUI::scorePointsHuman(3);
+                    } else if (word.size() == 7) {
+                        BoggleGUI::scorePointsHuman(5);
+                    } else if (word.size() > 7) {
+                        BoggleGUI::scorePointsHuman(11);
+                    }
                     return true;
                 } else {
                     // move to next starting character
