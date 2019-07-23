@@ -11,7 +11,6 @@ bool searchNeighbors(const Grid<char>& board, Grid<bool>& marked, string current
 void computerWordSearchHelper(const Grid<char>& board, const Lexicon& dictionary, Grid<bool>& marked, string currentWord, Set<string>& words, int row, int col);
 void mark(Grid<bool>& marked, int row, int col);
 void unmark(Grid<bool>& marked, int row, int col);
-void clearMarks(Grid<bool>& marked);
 
 bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word) {
     // Handle word not found in dictionary and word length too low
@@ -94,11 +93,6 @@ bool searchNeighbors(const Grid<char>& board, Grid<bool>& marked, string current
 void unmark(Grid<bool>& marked, int row, int col) {
     marked[row][col] = false;
     BoggleGUI::setHighlighted(row, col, false);
-}
-
-void clearMarks(Grid<bool>& marked) {
-    marked.fill(false);
-    BoggleGUI::clearHighlighting();
 }
 
 void mark(Grid<bool>& marked, int row, int col) {
