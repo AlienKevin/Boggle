@@ -117,9 +117,30 @@ Set<string> computerWordSearch(Grid<char>& board, Lexicon& dictionary, Set<strin
         for (int c = 0; c < board.numCols(); c ++) {
             string currentWord = charToString(board[r][c]);
             cout << currentWord << endl;
-            mark(marked, r, c);
+            marked[r][c] = true;
             computerWordSearchHelper(board, dictionary, marked, currentWord, words, r, c);
-            unmark(marked, r, c);
+            marked[r][c] = false;
+        }
+    }
+    // remove human found words from the computer found words
+    words -= humanWords;
+    for (string word : words) {
+        // add score
+        // Words of 4 or fewer letters are worth 1 point.
+        // 5-letter words are worth 2 points.
+        // 6-letter words are worth 3 points.
+        // 7-letter words are worth 5 points.
+        // Words longer than 7 letters are worth 11 points.
+        if (word.size() <= 4) {
+            BoggleGUI::scorePointsComputer(1);
+        } else if (word.size() == 5) {
+            BoggleGUI::scorePointsComputer(2);
+        } else if (word.size() == 6) {
+            BoggleGUI::scorePointsComputer(3);
+        } else if (word.size() == 7) {
+            BoggleGUI::scorePointsComputer(5);
+        } else if (word.size() > 7) {
+            BoggleGUI::scorePointsComputer(11);
         }
     }
     return words;
@@ -134,15 +155,13 @@ void computerWordSearchHelper(const Grid<char>& board, const Lexicon& dictionary
                 char currentChar = board[r][c];
                 string newWord = currentWord + charToString(currentChar);
                 if (newWord.size() >= BoggleGUI::MIN_WORD_LENGTH && dictionary.contains(newWord)) {
-                    mark(marked, r, c);
-                    unmark(marked, r, c);
                     cout << newWord << endl;
                     words.add(newWord);
                 }
                 if (dictionary.containsPrefix(newWord)) {
-                    mark(marked, r, c);
+                    marked[r][c] = true;
                     computerWordSearchHelper(board, dictionary, marked, newWord, words, r, c);
-                    unmark(marked, r, c);
+                    marked[r][c] = false;
                 }
             }
         }
