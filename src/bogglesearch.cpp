@@ -7,7 +7,7 @@
 using namespace std;
 
 bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word);
-bool searchNeighbors(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord, int row, int col);
+bool humanWordSearchHelper(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord, int row, int col);
 void computerWordSearchHelper(const Grid<char>& board, const Lexicon& dictionary, Grid<bool>& marked, string currentWord, Set<string>& words, int row, int col);
 void mark(Grid<bool>& marked, int row, int col);
 void unmark(Grid<bool>& marked, int row, int col);
@@ -32,7 +32,7 @@ bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word) {
             if (startsWith(word, newWord)) {
                 mark(marked, r, c);
                 // explore neighbors
-                if (searchNeighbors(board, marked, newWord, word, r, c)) {
+                if (humanWordSearchHelper(board, marked, newWord, word, r, c)) {
                     // add score
                     // Words of 4 or fewer letters are worth 1 point.
                     // 5-letter words are worth 2 points.
@@ -62,7 +62,7 @@ bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word) {
     return false;
 }
 
-bool searchNeighbors(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord, int row, int col) {
+bool humanWordSearchHelper(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord, int row, int col) {
     // explore eight adjacent neighbors
     for (int r = row - 1; r <= row + 1; r ++) {
         for (int c = col - 1; c <= col + 1; c ++) {
@@ -76,7 +76,7 @@ bool searchNeighbors(const Grid<char>& board, Grid<bool>& marked, string current
                 }
                 if (!marked[r][c] && startsWith(targetWord, newWord)) {
                     mark(marked, r, c);
-                    if (searchNeighbors(board, marked, newWord, targetWord, r, c)) {
+                    if (humanWordSearchHelper(board, marked, newWord, targetWord, r, c)) {
                         return true;
                     } else {
                         // backtrack to choose another neighbor
