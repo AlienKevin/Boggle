@@ -116,7 +116,6 @@ Set<string> computerWordSearch(Grid<char>& board, Lexicon& dictionary, Set<strin
     for (int r = 0; r < board.numRows(); r ++) {
         for (int c = 0; c < board.numCols(); c ++) {
             string currentWord = charToString(board[r][c]);
-            cout << currentWord << endl;
             marked[r][c] = true;
             computerWordSearchHelper(board, dictionary, marked, currentWord, words, r, c);
             marked[r][c] = false;
@@ -155,7 +154,6 @@ void computerWordSearchHelper(const Grid<char>& board, const Lexicon& dictionary
                 char currentChar = board[r][c];
                 string newWord = currentWord + charToString(currentChar);
                 if (newWord.size() >= BoggleGUI::MIN_WORD_LENGTH && dictionary.contains(newWord)) {
-                    cout << newWord << endl;
                     words.add(newWord);
                 }
                 if (dictionary.containsPrefix(newWord)) {
