@@ -8,8 +8,10 @@ using namespace std;
 
 bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word);
 bool searchNeighbors(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord, int row, int col);
+void computerWordSearchHelper(const Grid<char>& board, const Lexicon& dictionary, Grid<bool>& marked, string currentWord, Set<string>& words, int row, int col);
 void mark(Grid<bool>& marked, int row, int col);
 void unmark(Grid<bool>& marked, int row, int col);
+void clearMarks(Grid<bool>& marked);
 
 bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word) {
     // Handle word not found in dictionary and word length too low
@@ -94,6 +96,11 @@ void unmark(Grid<bool>& marked, int row, int col) {
     BoggleGUI::setHighlighted(row, col, false);
 }
 
+void clearMarks(Grid<bool>& marked) {
+    marked.fill(false);
+    BoggleGUI::clearHighlighting();
+}
+
 void mark(Grid<bool>& marked, int row, int col) {
     marked[row][col] = true;
     BoggleGUI::setHighlighted(row, col, true);
@@ -101,6 +108,43 @@ void mark(Grid<bool>& marked, int row, int col) {
 
 Set<string> computerWordSearch(Grid<char>& board, Lexicon& dictionary, Set<string>& humanWords) {
     Set<string> words;
-    // TODO
+    // Initialize marked grid to be filled with false
+    Grid<bool> marked(board.numRows(), board.numCols(), false);
+    // Clear previous highlighting
+    BoggleGUI::clearHighlighting();
+
+    for (int r = 0; r < board.numRows(); r ++) {
+        for (int c = 0; c < board.numCols(); c ++) {
+            string currentWord = charToString(board[r][c]);
+            cout << currentWord << endl;
+            mark(marked, r, c);
+            computerWordSearchHelper(board, dictionary, marked, currentWord, words, r, c);
+            unmark(marked, r, c);
+        }
+    }
     return words;
+}
+
+void computerWordSearchHelper(const Grid<char>& board, const Lexicon& dictionary, Grid<bool>& marked, string currentWord, Set<string>& words, int row, int col) {
+    // explore eight adjacent neighbors
+    for (int r = row - 1; r <= row + 1; r ++) {
+        for (int c = col - 1; c <= col + 1; c ++) {
+            if (board.inBounds(r, c) && !marked[r][c]) {
+                // choose
+                char currentChar = board[r][c];
+                string newWord = currentWord + charToString(currentChar);
+                if (newWord.size() >= BoggleGUI::MIN_WORD_LENGTH && dictionary.contains(newWord)) {
+                    mark(marked, r, c);
+                    unmark(marked, r, c);
+                    cout << newWord << endl;
+                    words.add(newWord);
+                }
+                if (dictionary.containsPrefix(newWord)) {
+                    mark(marked, r, c);
+                    computerWordSearchHelper(board, dictionary, marked, newWord, words, r, c);
+                    unmark(marked, r, c);
+                }
+            }
+        }
+    }
 }
