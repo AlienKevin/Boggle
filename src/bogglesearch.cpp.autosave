@@ -1,0 +1,215 @@
+/**
+ * Boggle assignment for CS106B at Stanford Summer Session 2019
+ * Author: Kevin Li
+ * Description: 
+ * Boggle is a board game with a 4x4 square grid of letter cubes where players try to make words by 
+ * connecting letters on adjacent cubes. This program simulates a boggle game. It let a human player play 
+ * against the computer which searches a Boggle board for words using backtracking.
+ */
+#include "bogglegui.h"
+#include <string>
+#include "strlib.h"
+#include "grid.h"
+#include "lexicon.h"
+#include "set.h"
+using namespace std;
+
+bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word);
+bool humanWordSearchHelper(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord, int row, int col);
+void computerWordSearchHelper(const Grid<char>& board, const Lexicon& dictionary, Grid<bool>& marked, string currentWord, Set<string>& words, int row, int col);
+void mark(Grid<bool>& marked, int row, int col);
+void unmark(Grid<bool>& marked, int row, int col);
+
+/**
+ * @brief Check if human's word can be found in the dictionary and in the board
+ * @param board the game board
+ * @param dictionary the dictionary containing all English words
+ * @param word the human's word to validate
+ * @return true if human's word is valid, false otherwise
+ */
+bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word) {
+    // Handle word not found in dictionary and word length too low
+    if (word.size() < BoggleGUI::MIN_WORD_LENGTH ||
+            !dictionary.contains(word)) {
+        return false;
+    }
+    // Initialize marked grid to be filled with false
+    Grid<bool> marked(board.numRows(), board.numCols(), false);
+    // Clear previous highlighting
+    BoggleGUI::clearHighlighting();
+
+    // Iterate over decisions
+    for (int r = 0; r < board.numRows(); r ++) {
+        for (int c = 0; c < board.numCols(); c ++) {
+            // choose
+            char currentChar = board[r][c];
+            string newWord = charToString(currentChar);
+            if (startsWith(word, newWord)) {
+                mark(marked, r, c);
+                // explore neighbors
+                if (humanWordSearchHelper(board, marked, newWord, word, r, c)) {
+                    // add score
+                    // Words of 4 or fewer letters are worth 1 point.
+                    // 5-letter words are worth 2 points.
+                    // 6-letter words are worth 3 points.
+                    // 7-letter words are worth 5 points.
+                    // Words longer than 7 letters are worth 11 points.
+                    if (word.size() <= 4) {
+                        BoggleGUI::scorePointsHuman(1);
+                    } else if (word.size() == 5) {
+                        BoggleGUI::scorePointsHuman(2);
+                    } else if (word.size() == 6) {
+                        BoggleGUI::scorePointsHuman(3);
+                    } else if (word.size() == 7) {
+                        BoggleGUI::scorePointsHuman(5);
+                    } else if (word.size() > 7) {
+                        BoggleGUI::scorePointsHuman(11);
+                    }
+                    return true;
+                } else {
+                    // move to next starting character
+                    unmark(marked, r, c);
+                }
+            }
+        }
+    }
+    // no decisions left to make, the target word is not found
+    return false;
+}
+
+/**
+ * @brief Helper function for humanWordSearch that does recursive backtracking
+ * @param board the game board
+ * @param marked a grid of positions on the game board that is marked
+ * @param currentWord the current word formed on the board
+ * @param targetWord the target word to look for
+ * @param row current position's row index on the board
+ * @param col current position's column index on the board
+ * @return
+ */
+bool humanWordSearchHelper(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord, int row, int col) {
+    // explore eight adjacent neighbors
+    for (int r = row - 1; r <= row + 1; r ++) {
+        for (int c = col - 1; c <= col + 1; c ++) {
+            if (board.inBounds(r, c)) {
+                // choose
+                char currentChar = board[r][c];
+                string newWord = currentWord + charToString(currentChar);
+                if (newWord == targetWord) {
+                    mark(marked, r, c);
+                    return true;
+                }
+                if (!marked[r][c] && startsWith(targetWord, newWord)) {
+                    mark(marked, r, c);
+                    if (humanWordSearchHelper(board, marked, newWord, targetWord, r, c)) {
+                        return true;
+                    } else {
+                        // backtrack to choose another neighbor
+                        unmark(marked, r, c);
+                    }
+                }
+            }
+        }
+    }
+    // all neighbors failed to match the target word
+    return false;
+}
+
+/**
+ * @brief Unmark a position on the board as traversed and turn off highlight
+ * @param marked a grid of positions on the game board that is marked
+ * @param row the row index on the board to unmark
+ * @param col the column index on the board to unmark
+ */
+void unmark(Grid<bool>& marked, int row, int col) {
+    marked[row][col] = false;
+    BoggleGUI::setHighlighted(row, col, false);
+}
+
+/**
+ * @brief Mark a position on the board as traversed and turn on highlight
+ * @param marked a grid of positions on the game board that is marked
+ * @param row the row index on the board to mark
+ * @param col the column index on the board to mark
+ */
+void mark(Grid<bool>& marked, int row, int col) {
+    marked[row][col] = true;
+    BoggleGUI::setHighlighted(row, col, true);
+}
+
+/**
+ * @brief Search for all  possible valid English words that can be formed on the game board
+ * @param board the game board
+ * @param dictionary the dictionary containing all English words
+ * @param humanWords a set of all words found by human
+ * @return all words that can be formed not found by human
+ */
+Set<string> computerWordSearch(Grid<char>& board, Lexicon& dictionary, Set<string>& humanWords) {
+    Set<string> words;
+    // Initialize marked grid to be filled with false
+    Grid<bool> marked(board.numRows(), board.numCols(), false);
+    // Clear previous highlighting
+    BoggleGUI::clearHighlighting();
+
+    for (int r = 0; r < board.numRows(); r ++) {
+        for (int c = 0; c < board.numCols(); c ++) {
+            string currentWord = charToString(board[r][c]);
+            marked[r][c] = true;
+            computerWordSearchHelper(board, dictionary, marked, currentWord, words, r, c);
+            marked[r][c] = false;
+        }
+    }
+    // remove human found words from the computer found words
+    words -= humanWords;
+    for (string word : words) {
+        // add score
+        // Words of 4 or fewer letters are worth 1 point.
+        // 5-letter words are worth 2 points.
+        // 6-letter words are worth 3 points.
+        // 7-letter words are worth 5 points.
+        // Words longer than 7 letters are worth 11 points.
+        if (word.size() <= 4) {
+            BoggleGUI::scorePointsComputer(1);
+        } else if (word.size() == 5) {
+            BoggleGUI::scorePointsComputer(2);
+        } else if (word.size() == 6) {
+            BoggleGUI::scorePointsComputer(3);
+        } else if (word.size() == 7) {
+            BoggleGUI::scorePointsComputer(5);
+        } else if (word.size() > 7) {
+            BoggleGUI::scorePointsComputer(11);
+        }
+    }
+    return words;
+}
+
+/**
+ * @brief Helper function for computerWordSearch that uses recursive backtracking
+ * @param board the game board
+ * @param dictionary the dictionary containing all English words
+ * @param marked a grid of positions on the game board that is marked
+ * @param currentWord the current word formed on the board
+ * @param words a set of words found
+ * @param row current position's row index on the board
+ * @param col current position's column index on the board
+ */
+void computerWordSearchHelper(const Grid<char>& board, const Lexicon& dictionary, Grid<bool>& marked, string currentWord, Set<string>& words, int row, int col) {
+    // explore eight adjacent neighbors
+    for (int r = row - 1; r <= row + 1; r ++) {
+        for (int c = col - 1; c <= col + 1; c ++) {
+            if (board.inBounds(r, c) && !marked[r][c]) {
+                // choose
+                char currentChar = board[r][c];
+                string newWord = currentWord + charToString(currentChar);
+                if (newWord.size() >= BoggleGUI::MIN_WORD_LENGTH && dictionary.contains(newWord)) {
+                    words.add(newWord);
+                }
+                if (dictionary.containsPrefix(newWord)) {
+                    marked[r][c] = true;
+                    computerWordSearchHelper(board, dictionary, marked, newWord, words, r, c);
+                    marked[r][c] = false;
+                }
+            }
+        }
+    }
+}
