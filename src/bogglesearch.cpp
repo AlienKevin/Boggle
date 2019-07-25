@@ -12,6 +12,13 @@ void computerWordSearchHelper(const Grid<char>& board, const Lexicon& dictionary
 void mark(Grid<bool>& marked, int row, int col);
 void unmark(Grid<bool>& marked, int row, int col);
 
+/**
+ * @brief Check if human's word can be found in the dictionary and in the board
+ * @param board the game board
+ * @param dictionary the dictionary containing all English words
+ * @param word the human's word to validate
+ * @return true if human's word is valid, false otherwise
+ */
 bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word) {
     // Handle word not found in dictionary and word length too low
     if (word.size() < BoggleGUI::MIN_WORD_LENGTH ||
@@ -62,6 +69,16 @@ bool humanWordSearch(Grid<char>& board, Lexicon& dictionary, string word) {
     return false;
 }
 
+/**
+ * @brief Helper function for humanWordSearch that does recursive backtracking
+ * @param board the game board
+ * @param marked a grid of positions on the game board that is marked
+ * @param currentWord the current word formed on the board
+ * @param targetWord the target word to look for
+ * @param row current position's row index on the board
+ * @param col current position's column index on the board
+ * @return
+ */
 bool humanWordSearchHelper(const Grid<char>& board, Grid<bool>& marked, string currentWord, string targetWord, int row, int col) {
     // explore eight adjacent neighbors
     for (int r = row - 1; r <= row + 1; r ++) {
@@ -90,16 +107,35 @@ bool humanWordSearchHelper(const Grid<char>& board, Grid<bool>& marked, string c
     return false;
 }
 
+/**
+ * @brief Unmark a position on the board as traversed and turn off highlight
+ * @param marked a grid of positions on the game board that is marked
+ * @param row the row index on the board to unmark
+ * @param col the column index on the board to unmark
+ */
 void unmark(Grid<bool>& marked, int row, int col) {
     marked[row][col] = false;
     BoggleGUI::setHighlighted(row, col, false);
 }
 
+/**
+ * @brief Mark a position on the board as traversed and turn on highlight
+ * @param marked a grid of positions on the game board that is marked
+ * @param row the row index on the board to mark
+ * @param col the column index on the board to mark
+ */
 void mark(Grid<bool>& marked, int row, int col) {
     marked[row][col] = true;
     BoggleGUI::setHighlighted(row, col, true);
 }
 
+/**
+ * @brief Search for all  possible valid English words that can be formed on the game board
+ * @param board the game board
+ * @param dictionary the dictionary containing all English words
+ * @param humanWords a set of all words found by human
+ * @return all words that can be formed not found by human
+ */
 Set<string> computerWordSearch(Grid<char>& board, Lexicon& dictionary, Set<string>& humanWords) {
     Set<string> words;
     // Initialize marked grid to be filled with false
@@ -139,6 +175,16 @@ Set<string> computerWordSearch(Grid<char>& board, Lexicon& dictionary, Set<strin
     return words;
 }
 
+/**
+ * @brief Helper function for computerWordSearch that uses recursive backtracking
+ * @param board the game board
+ * @param dictionary the dictionary containing all English words
+ * @param marked a grid of positions on the game board that is marked
+ * @param currentWord the current word formed on the board
+ * @param words a set of words found
+ * @param row current position's row index on the board
+ * @param col current position's column index on the board
+ */
 void computerWordSearchHelper(const Grid<char>& board, const Lexicon& dictionary, Grid<bool>& marked, string currentWord, Set<string>& words, int row, int col) {
     // explore eight adjacent neighbors
     for (int r = row - 1; r <= row + 1; r ++) {
